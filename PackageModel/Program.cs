@@ -2,14 +2,14 @@
 //Use the unfinished, prototype features
 #define ALLOW_PROTOTYPE_CODE
 //Use the old, buggy Library_Nodes tracer
-#define USE_LEGACY_LIB_NODES_TRACER
+//#define USE_LEGACY_LIB_NODES_TRACER
 
 
 using ColladaDotNet;
-using Microsoft.Xna.Framework;
 using PackageModel.Collada_Reader;
 using PackageModel.Duplicated_Classes;
 using System;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -23,8 +23,6 @@ namespace PackageModel
     {
         static string InFile = "Test2.dae";
         static string OutFile = "TestOut.cgmdl";
-        static string Name = "TestModel";
-        static string Description = "A sample test model made by Blue Shift Model Packer v. 0.0.0.1a";
         static bool PreserveHierarchies = false;
         static bool CustomLines = false;
         static string CustomLinesFile = "";
@@ -214,9 +212,6 @@ namespace PackageModel
 
                 //And build the geometry data
                 GameModel MData = new GameModel();
-                MData.Name = Name;
-                MData.Description = Description;
-                MData.LuaScript = "";
                 MData.ModelParts = Parts.ToArray();
                 MData.Instances = Instances.ToArray();
 
@@ -271,9 +266,6 @@ namespace PackageModel
                 #region Build Model Metadata
                 //Build the XML Model Metadata
                 var ModelData = new GameModel();
-                ModelData.Name = Name;
-                ModelData.Description = Description;
-                ModelData.LuaScript = ""; //No script till they write one
                 ModelData.Instances = new ModelPartInstance[]  //Initialize the model instances with a default
                 {
                     new ModelPartInstance 
@@ -307,8 +299,6 @@ namespace PackageModel
         {
 
             SerializableGeometry Geometry = geom.ToSerializableGeometry();
-            Geometry.Name = Name;
-            Geometry.Description = Description;
             Geometry.LineColor = new float[] { LinesColor.R, LinesColor.G, LinesColor.B, LinesColor.A };
             Geometry.Serialize(file);
         }
@@ -568,11 +558,9 @@ namespace PackageModel
             {
                 InFile = args[0]; //Set the required args - input
                 OutFile = args[1]; // - output
-                Name = args[2]; // - model display name
-                Description = args[3]; // - model description
 
                 //Process command line arguments arguments
-                for (int index = 3; index < args.Count(); index++)
+                for (int index = 4; index < args.Count(); index++)
                     switch (args[index]) //Argument switch table
                     {
                         case "-splitcomponents":
@@ -587,13 +575,21 @@ namespace PackageModel
                             DisableLines = true; //Set the flag to disable lines
                             break;
                         case "-customlinecolor":
-                            LinesColor = new Color( //Set the line color
-                                float.Parse(args[index + 1]), //Read the next argument (R) 
-                                float.Parse(args[index + 2]), //2 further (G)
-                                float.Parse(args[index + 3]), //3 further (B)
-                                float.Parse(args[index + 4])  //4 further (A)
-                                );
-                            index += 4; //And increment the args index
+                            try
+                            {
+                                LinesColor = new Color( //Set the line color
+                                    float.Parse(args[index + 1]), //Read the next argument (R) 
+                                    float.Parse(args[index + 2]), //2 further (G)
+                                    float.Parse(args[index + 3]), //3 further (B)
+                                    float.Parse(args[index + 4])  //4 further (A)
+                                    );
+                                index += 4; //And increment the args index
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new ArgumentException("ERROR: Custom Lines Color not correctly specified.", ex);
+                                
+                            }
                             break;
                         default:
                             Console.WriteLine("ERROR: Unknown argument" + args[index]);
@@ -611,8 +607,6 @@ namespace PackageModel
                     "Invalid arguments. Required arguments are: \n" +
                     "\t\tArgument 1: Input file \n" +
                     "\t\tArgument 2: Output file \n" +
-                    "\t\tArgument 3: Model name \n" +
-                    "\t\tArgument 4: Model description \n" +
                     "\tOptional arguments: \n" +
                     "\t\t-splitcomponents: Save each component in the SketchUp file \n\t\tto a different file. \n" +
                     "\t\t-customlines [file]: Load lines from a different DAE file \n\t\t(not usable with -splitcomponents) \n" +

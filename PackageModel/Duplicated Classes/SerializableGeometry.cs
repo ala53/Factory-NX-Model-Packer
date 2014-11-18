@@ -84,10 +84,6 @@ namespace PackageModel.Duplicated_Classes
         public byte[] SpecularAtlas;
 
         //Attributes
-        [ProtoMember(11)]
-        public string Name;
-        [ProtoMember(12)]
-        public string Description;
         [ProtoMember(13)]
         public float[] LineColor;
 
@@ -96,6 +92,8 @@ namespace PackageModel.Duplicated_Classes
         {
             var GZ = new GZipStream(Output, CompressionMode.Compress, true);
             Serializer.Serialize(GZ, this);
+
+            GZ.Close();
         }
 
         public void Serialize(string File)

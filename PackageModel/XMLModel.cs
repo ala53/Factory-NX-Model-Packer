@@ -11,11 +11,8 @@ namespace PackageModel
     [Serializable]
     public class GameModel
     {
-        public string Name;
-        public string Description;
         public ModelPart[] ModelParts;
         public ModelPartInstance[] Instances;
-        public string LuaScript;
 
         public void Serialize(string Filename)
         {
