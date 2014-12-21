@@ -14,9 +14,9 @@ namespace PackageModel.Collada_Reader
         public static CompiledGeometry MergeGeometries(GeometryInstance[] Instances)
         {
             //These are the vertices and indices for ALL of the triangles - 6 mb of memory preallocated for performance
-            List<VertexDeferredLighting> TriangleVertices = new List<VertexDeferredLighting>(50000); //4 mb allocated
-            HashSet<VertexDeferredLighting> TriangleVerticesHash = new HashSet<VertexDeferredLighting>(); //hashset for collision checks
-            Dictionary<VertexDeferredLighting, int> TriangleIndices = new Dictionary<VertexDeferredLighting, int>();
+            List<Vertex> TriangleVertices = new List<Vertex>(50000); //4 mb allocated
+            HashSet<Vertex> TriangleVerticesHash = new HashSet<Vertex>(); //hashset for collision checks
+            Dictionary<Vertex, int> TriangleIndices = new Dictionary<Vertex, int>();
 
             List<int> Indices = new List<int>(500000); //2 mb allocated
 
@@ -57,9 +57,9 @@ namespace PackageModel.Collada_Reader
         static object SyncLock = new object();
 
         private static void ProcessInstanceList(GeometryInstance[] Instances,
-            List<VertexDeferredLighting> TriangleVertices,
-            HashSet<VertexDeferredLighting> TriangleVerticesHash,
-            Dictionary<VertexDeferredLighting, int> TriangleIndexLookupTable,
+            List<Vertex> TriangleVertices,
+            HashSet<Vertex> TriangleVerticesHash,
+            Dictionary<Vertex, int> TriangleIndexLookupTable,
             List<int> TrianglesIndices,
             HashSet<InternalTriangle> DuplicateCheck,
             List<Vector3> VerticesLines,
@@ -116,7 +116,7 @@ namespace PackageModel.Collada_Reader
             }
         }
 
-        private static void ProcessTriangle(List<VertexDeferredLighting> Vertices, HashSet<VertexDeferredLighting> VHash, Dictionary<VertexDeferredLighting, int> IndexList, List<int> Indices, Triangle tri)
+        private static void ProcessTriangle(List<Vertex> Vertices, HashSet<Vertex> VHash, Dictionary<Vertex, int> IndexList, List<int> Indices, Triangle tri)
         {
             //Process all 3 vertices
             ProcessVertex(Vertices, VHash, IndexList, Indices, tri.v1);
@@ -125,7 +125,7 @@ namespace PackageModel.Collada_Reader
         }
 
 
-        private static void ProcessVertex(List<VertexDeferredLighting> Vertices, HashSet<VertexDeferredLighting> VHash, Dictionary<VertexDeferredLighting, int> IndexList, List<int> Indices, VertexDeferredLighting vertex)
+        private static void ProcessVertex(List<Vertex> Vertices, HashSet<Vertex> VHash, Dictionary<Vertex, int> IndexList, List<int> Indices, Vertex vertex)
         {
             if (!VHash.Contains(vertex))
             {
@@ -177,9 +177,9 @@ namespace PackageModel.Collada_Reader
 
     struct InternalTriangle
     {
-        public VertexDeferredLighting v1;
-        public VertexDeferredLighting v2;
-        public VertexDeferredLighting v3;
+        public Vertex v1;
+        public Vertex v2;
+        public Vertex v3;
 
         public override int GetHashCode()
         {

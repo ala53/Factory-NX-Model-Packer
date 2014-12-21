@@ -13,7 +13,7 @@ namespace PackageModel.Collada_Reader
     public class CompiledGeometry
     {
         [ProtoMember(1)]
-        public VertexDeferredLighting[] Vertices;
+        public Vertex[] Vertices;
         [ProtoMember(2)]
         public int[] Indices;
         [ProtoMember(3)]
@@ -39,15 +39,11 @@ namespace PackageModel.Collada_Reader
             var SInstance = new SerializableGeometry();
 
             SInstance.TextureAtlas = Texture;
-            SInstance.NormalAtlas = Normals;
-            SInstance.SpecularAtlas = Specular;
 
             SInstance.TextureId = TextureId;
-            SInstance.NormalId = NormalId;
-            SInstance.SpecularId = SpecularId;
 
             List<float> SerializableVertices = new List<float>();
-            foreach (VertexDeferredLighting vertex in Vertices)
+            foreach (Vertex vertex in Vertices)
                 SerializableVertices.AddRange(SerializableVertex.ConvertFromGPUVertex(vertex));
 
             SInstance.Vertices = SerializableVertices.ToArray();

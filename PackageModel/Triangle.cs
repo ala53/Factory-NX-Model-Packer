@@ -9,8 +9,8 @@ namespace PackageModel
 
     public class Triangle
     {
-        public VertexDeferredLighting v1;
-        public VertexDeferredLighting v2;
-        public VertexDeferredLighting v3;
+        public Vertex v1;
+        public Vertex v2;
+        public Vertex v3;
     }
 }

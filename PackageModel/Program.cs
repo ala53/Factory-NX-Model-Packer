@@ -27,7 +27,6 @@ namespace PackageModel
         static bool CustomLines = false;
         static string CustomLinesFile = "";
         static bool DisableLines = false;
-        static Color LinesColor = Color.Blue;
         static void Main(string[] args)
         {
             ProcessArguments(args);
@@ -156,6 +155,36 @@ namespace PackageModel
                 //one for each Node from Library_Nodes
                 #endregion
                 #region Save each component to a different file
+                //Save componentless
+                foreach (NodePointer node in InstanceNodes)
+                {
+                    if (node.Name == "ComponentlessGeometry")
+                    {
+                        var CompiledGeo = GeometryCollection.MergeGeometries(
+                        node.Node.CompileNode
+                        (
+                        ColladaFile, Geometries, ResolvedMaterials, Textures
+                        ));
+                        if (DisableLines)
+                        {
+                            //Just create an empty line
+                            CompiledGeo.IndicesLines = new int[] { 0, 1 };
+                            CompiledGeo.VerticesLines = new Vector3[] { Vector3.Zero, Vector3.Zero };
+                        }
+                        //Give it a copy of the textures, each component gets the full texture map
+                        CompiledGeo.Texture = Textures.TextureDDS;
+                        CompiledGeo.TextureId = Textures.TextureId;
+
+                        //Make sure to create the output directory, so the next line doesn't crash
+                        System.IO.Directory.CreateDirectory(OutFile);
+
+                        //And save this component to a file
+                        SaveGeometry(OutFile + "/" + node.Name + ".cgmdl", CompiledGeo);
+
+                        break;
+                    }
+                }
+
                 foreach (ModularNode node in LibraryNodes.Values)
                 {
                     //Compile the node and merge all it's geometry instances
@@ -172,10 +201,6 @@ namespace PackageModel
                         CompiledGeo.VerticesLines = new Vector3[] { Vector3.Zero, Vector3.Zero };
                     }
                     //Give it a copy of the textures, each component gets the full texture map
-                    CompiledGeo.Normals = Textures.NormalDDS;
-                    CompiledGeo.NormalId = Textures.NormalId;
-                    CompiledGeo.Specular = Textures.SpecularDDS;
-                    CompiledGeo.SpecularId = Textures.SpecularId;
                     CompiledGeo.Texture = Textures.TextureDDS;
                     CompiledGeo.TextureId = Textures.TextureId;
 
@@ -193,6 +218,13 @@ namespace PackageModel
                     //And add it to the parts list for the metadata
                     Parts.Add(p);
                 }
+
+                //Add componentless
+                Parts.Add(new ModelPart()
+                {
+                    Name = "ComponentlessGeometry",
+                    File = OutFile + "/MergedGeometry.cgmdl"
+                });
                 #endregion
                 #region Write nodes to metadata file
                 //Then build the XML Model Data for the instances
@@ -216,7 +248,7 @@ namespace PackageModel
                 MData.Instances = Instances.ToArray();
 
                 //And save it to a file
-                MData.Serialize(OutFile + ".mdata");
+                MData.Serialize(OutFile + ".json");
                 #endregion
             }
             else
@@ -236,10 +268,6 @@ namespace PackageModel
                 #region Compile geometry to a single instance
                 //Compile it to one file
                 var merged = GeometryCollection.MergeGeometries(InstanceGeometry.ToArray());
-                merged.Normals = Textures.NormalDDS;
-                merged.NormalId = Textures.NormalId;
-                merged.Specular = Textures.SpecularDDS;
-                merged.SpecularId = Textures.SpecularId;
                 merged.Texture = Textures.TextureDDS;
                 merged.TextureId = Textures.TextureId;
                 #region Handle Optional Arguments
@@ -299,7 +327,6 @@ namespace PackageModel
         {
 
             SerializableGeometry Geometry = geom.ToSerializableGeometry();
-            Geometry.LineColor = new float[] { LinesColor.R, LinesColor.G, LinesColor.B, LinesColor.A };
             Geometry.Serialize(file);
         }
 
@@ -505,10 +532,6 @@ namespace PackageModel
             MergedGeometries = GeometryCollection.MergeGeometries(InstancesOfGeometries.ToArray());
             MergedGeometries.Texture = Textures.TextureDDS;
             MergedGeometries.TextureId = Textures.TextureId;
-            MergedGeometries.Normals = Textures.NormalDDS;
-            MergedGeometries.NormalId = Textures.NormalId;
-            MergedGeometries.Specular = Textures.SpecularDDS;
-            MergedGeometries.SpecularId = Textures.SpecularId;
 
             return MergedGeometries;
         }
@@ -553,17 +576,20 @@ namespace PackageModel
         static void ProcessArguments(string[] args)
         {
 
-            Console.Title = "Blue Shift Model Packer";
-            if (args.Count() > 3)
+            Console.Title = "MPTanks 2D Model Packer";
+            if (args.Count() > 2)
             {
                 InFile = args[0]; //Set the required args - input
                 OutFile = args[1]; // - output
 
                 //Process command line arguments arguments
-                for (int index = 4; index < args.Count(); index++)
+                for (int index = 2; index < args.Count(); index++)
                     switch (args[index]) //Argument switch table
                     {
                         case "-splitcomponents":
+                            Console.WriteLine("-splitcomponents is disabled until further notice." +
+                                "Press any key to continue.");
+                            Console.Read();
                             PreserveHierarchies = true; //Set the flag to preserve component hierarchies
                             break;
                         case "-customlines":
@@ -573,23 +599,6 @@ namespace PackageModel
                             break;
                         case "-nolines":
                             DisableLines = true; //Set the flag to disable lines
-                            break;
-                        case "-customlinecolor":
-                            try
-                            {
-                                LinesColor = new Color( //Set the line color
-                                    float.Parse(args[index + 1]), //Read the next argument (R) 
-                                    float.Parse(args[index + 2]), //2 further (G)
-                                    float.Parse(args[index + 3]), //3 further (B)
-                                    float.Parse(args[index + 4])  //4 further (A)
-                                    );
-                                index += 4; //And increment the args index
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new ArgumentException("ERROR: Custom Lines Color not correctly specified.", ex);
-                                
-                            }
                             break;
                         default:
                             Console.WriteLine("ERROR: Unknown argument" + args[index]);
@@ -608,11 +617,10 @@ namespace PackageModel
                     "\t\tArgument 1: Input file \n" +
                     "\t\tArgument 2: Output file \n" +
                     "\tOptional arguments: \n" +
-                    "\t\t-splitcomponents: Save each component in the SketchUp file \n\t\tto a different file. \n" +
+                    "\t\t<DISABLED>-splitcomponents: Save each component\n\t\tto a different file. \n" +
                     "\t\t-customlines [file]: Load lines from a different DAE file \n\t\t(not usable with -splitcomponents) \n" +
-                    "\t\t-customlinecolor [R] [G] [B] [A]: Allows you to specify a \n\t\tdifferent line color for the model. \n" +
                     "\t\t-nolines: Disable lines for the model \n" +
-                    "\t E.g. PackageModel.exe \"In.dae\" \"Out.cgmdl\" \"Name\" \"Description\" -arg\n"
+                    "\t E.g. PackageModel.exe \"In.dae\" \"Out.cgmdl\" -arg1 -arg2...\n"
                     );
                 Console.WriteLine();
                 Console.Write("Enter arguments: "); //Give them a chance to enter the args now

@@ -65,14 +65,14 @@ namespace PackageModel
                     List<Triangle> Tris = new List<Triangle>();
 
                     //Built vertex list
-                    List<VertexDeferredLighting> Vertices = new List<VertexDeferredLighting>();
+                    List<Vertex> Vertices = new List<Vertex>();
                     Vector3[] Normals = HasNormals ? GeometrySource.GetArray3D(NormalsID) : new Vector3[1];
                     Vector3[] Vertices2 = GeometrySource.GetArray3D(PositionID);
                     Vector2[] TexCoords = hasTexCoord ? GeometrySource.GetArray2D(texCoordID) : new Vector2[1];
 
                     for (int vertex = 0; vertex < Vertices2.Count(); vertex++)
                     {
-                        var v = new VertexDeferredLighting();
+                        var v = new Vertex();
                         v.Position = Vertices2[vertex];
 
                         if (HasNormals)
@@ -93,8 +93,6 @@ namespace PackageModel
                                 v2 = Vertices[IndicesArray[index + 2]], 
                                 v3 = Vertices[IndicesArray[index + 4]] 
                             };
-                            //Calculate Binormal and tangent
-                            BinormalTangentCalculator.Calculate(tri);
 
                             //Set texCoords
                             tri.v1.TexCoord = TexCoords[IndicesArray[index + 1]];
@@ -112,11 +110,6 @@ namespace PackageModel
                                 v2 = Vertices[IndicesArray[index + 1]],
                                 v3 = Vertices[IndicesArray[index + 2]]
                             };
-
-
-
-                            //Calculate Binormal and tangent
-                            BinormalTangentCalculator.Calculate(tri);
 
                             //Set texCoords for the colored texture sampler
                             tri.v1.TexCoord = new Vector2(0, 0);

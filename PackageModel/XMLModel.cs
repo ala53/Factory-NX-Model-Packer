@@ -16,11 +16,32 @@ namespace PackageModel
 
         public void Serialize(string Filename)
         {
-            XmlSerializer xs = new XmlSerializer(typeof(GameModel));
-            FileStream fs = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
-            xs.Serialize(fs, this);
+            var xs = new Newtonsoft.Json.JsonSerializer();
+            xs.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+            xs.Formatting = Newtonsoft.Json.Formatting.Indented;
+            var fs = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
+            var wt = new StreamWriter(fs);
+            xs.Serialize(wt, this);
+
+            wt.Close();
 
             fs.Close();
+        }
+
+        public static GameModel Deserialize(string Filename)
+        {
+            Newtonsoft.Json.JsonSerializer xs = new Newtonsoft.Json.JsonSerializer();
+            xs.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+            FileStream fs = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
+            var rt = new StreamReader(fs);
+            var jrt = new Newtonsoft.Json.JsonTextReader(rt);
+           var res = xs.Deserialize<GameModel>(jrt);
+
+            jrt.Close();
+            rt.Close();
+            fs.Close();
+
+            return res;
         }
 
     }

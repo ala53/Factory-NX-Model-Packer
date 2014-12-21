@@ -17,11 +17,7 @@ namespace PackageModel
         public Sprite sprite;
 
         public byte[] TextureDDS;
-        public byte[] NormalDDS;
-        public byte[] SpecularDDS;
         public int TextureId;
-        public int NormalId;
-        public int SpecularId;
 
         public TextureMap(string[] images)
         {
@@ -32,19 +28,7 @@ namespace PackageModel
             List<string> ImagesCulled = new List<string>();
 
             foreach (string image in images)
-            {
-                string NameWOExtension = Path.GetFileNameWithoutExtension(image);
-                if (NameWOExtension.ToLower().EndsWith("_normal") ||
-                    NameWOExtension.ToLower().EndsWith("_specular"))
-                {
-                    //Dont add it to the new list because it's a property of a material
-
-                }
-                else
-                {
-                    ImagesCulled.Add(image);
-                }
-            }
+                ImagesCulled.Add(image);
 
             Console.WriteLine("\tPlacing images for efficiency...");
             List<ImageInfo> Images = new List<ImageInfo>();
@@ -88,24 +72,12 @@ namespace PackageModel
             Bitmap Textures = new Bitmap(sprite.Width, sprite.Height,
                 System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Graphics TextureGr = Graphics.FromImage(Textures);
-            //And the Normal+Specularity Atlas
-            Bitmap Normals = new Bitmap(sprite.Width, sprite.Height,
-                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            Graphics NormalGr = Graphics.FromImage(Normals);
-
-            Bitmap Specular = new Bitmap(sprite.Width, sprite.Height,
-                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            Graphics SpecularGr = Graphics.FromImage(Specular);
 
             //and draw the textures into the atlas
-            ProcessImages(sprite, TextureGr, NormalGr, SpecularGr);
+            ProcessImages(sprite, TextureGr);
 
             Console.WriteLine("\tConverting texture atlas to DDS/DXT1.");
             TextureDDS = ResampleToDDS(Textures);
-            Console.WriteLine("\tConverting normals atlas to DDS/DXT1.");
-            NormalDDS = ResampleToDDS(Normals);
-            Console.WriteLine("\tConverting specular atlas to DDS/DXT1.");
-            SpecularDDS = ResampleToDDS(Specular);
 
             SetInfo(sprite);
         }
@@ -116,25 +88,15 @@ namespace PackageModel
             Width = sprite.Width;
             Height = sprite.Height;
         }
-        private void InitializeImages(Graphics TextureGr, Graphics NormalGr, Graphics SpecularGr)
+        private void InitializeImages(Graphics TextureGr)
         {
             //TextureGr.SmoothingMode = SmoothingMode.None;
             //TextureGr.CompositingMode = CompositingMode.SourceCopy;
             //TextureGr.PixelOffsetMode = PixelOffsetMode.None;
             TextureGr.InterpolationMode = InterpolationMode.NearestNeighbor;
-
-            //Initialize it to default
-            NormalGr.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-            NormalGr.FillRectangle(new SolidBrush(Color.FromArgb(127, 127, 127, 255)),
-                new Rectangle(0, 0, 99999, 99999));
-            //127,127,127 for normals...255 for specularity
-
-            SpecularGr.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-            SpecularGr.FillRectangle(new SolidBrush(Color.FromArgb(255, 127, 0, 255)),
-                new Rectangle(0, 0, 99999, 99999)); //R is power, G is intensity, B is useless
         }
 
-        private void ProcessImages(Sprite sprite, Graphics TextureGr, Graphics NormalGr, Graphics SpecularGr)
+        private void ProcessImages(Sprite sprite, Graphics TextureGr)
         {
 
             foreach (IMappedImageInfo img in sprite.MappedImages)
@@ -155,36 +117,10 @@ namespace PackageModel
                 }
                 else
                 {
-                    //It's an actual texture
+                    //It's an actual texture file
                     Bitmap Texture = new Bitmap(Image.File);
                     TextureGr.DrawImage(Texture, img.X, img.Y, Texture.Width, Texture.Height);
                     Texture.Dispose();
-
-                    //Draw the normal map if there is one
-                    FileInfo fi = new FileInfo(Image.File);
-                    string NormalFile = Image.File.Replace(fi.Extension, "_normal" + fi.Extension);
-                    if (File.Exists(NormalFile))
-                    {
-                        Console.WriteLine("\t\tFound normal map for " + fi.Name);
-                        Bitmap Normal = new Bitmap(NormalFile);
-                        //If it does exist, we can just copy over...
-                        NormalGr.DrawImage(Normal, new Rectangle(img.X, img.Y, Normal.Width, Normal.Height));
-                        //Dispose of course
-                        Normal.Dispose();
-                        //And if it doesn't exist, we'll just leave it as the stock map
-                    }
-                    //Draw the specular map if there is one
-                    string SpecFile = Image.File.Replace(fi.Extension, "_specular" + fi.Extension);
-                    if (File.Exists(NormalFile))
-                    {
-                        Console.WriteLine("\t\tFound specular map for " + fi.Name);
-                        Bitmap SpecularImg = new Bitmap(SpecFile);
-                        //If it does exist, we can just copy over...
-                        SpecularGr.DrawImage(SpecularImg, new Rectangle(img.X, img.Y, SpecularImg.Width, SpecularImg.Height));
-                        //Again, dispose
-                        SpecularImg.Dispose();
-                        //And if it doesn't exist, we'll just leave it as the stock map
-                    }
                 }
             }
         }
@@ -218,7 +154,7 @@ namespace PackageModel
             Console.WriteLine("\t\tInitializing the converter...");
             Console.WriteLine("========================================================");
             //Call the converter
-            ProcessStartInfo prStart = new ProcessStartInfo("crunch", "/DXT1 -file TEMP_FILE_jndfs.bmp /out TMP_NEW.dds");
+            ProcessStartInfo prStart = new ProcessStartInfo("crunch", "/DXT5 -file TEMP_FILE_jndfs.bmp /out TMP_NEW.dds");
             prStart.UseShellExecute = false;
             Process pr = Process.Start(prStart);
             pr.WaitForExit();

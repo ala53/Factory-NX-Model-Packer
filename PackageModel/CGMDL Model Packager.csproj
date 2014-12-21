@@ -50,6 +50,10 @@
       <HintPath>..\packages\MonoGame-Portable.3.2.1\lib\portable-net4+sl4+wp8+win8\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Newtonsoft.Json.6.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
@@ -61,7 +65,6 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BinormalTangentCalculator.cs" />
     <Compile Include="Collada Reader\ColladaGeometry.cs" />
     <Compile Include="Collada Reader\CompiledGeometry.cs" />
     <Compile Include="Collada Reader\GeometriesList.cs" />
@@ -73,8 +76,7 @@
     <Compile Include="Collada Reader\ModularNode.cs" />
     <Compile Include="ConsoleTools.cs" />
     <Compile Include="Duplicated Classes\SerializableGeometry.cs" />
-    <Compile Include="Duplicated Classes\VertexDeferredLighting.cs" />
-    <Compile Include="Navigation Mesh Generator\Navmesh.cs" />
+    <Compile Include="Duplicated Classes\Vertex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collada Reader\TextureMap.cs" />
